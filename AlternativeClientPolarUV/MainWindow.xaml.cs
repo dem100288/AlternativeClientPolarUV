@@ -12,6 +12,9 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using System.IO;
+using VideoProccessLib;
+using Path = System.IO.Path;
 
 namespace AlternativeClientPolarUV
 {
@@ -20,9 +23,25 @@ namespace AlternativeClientPolarUV
     /// </summary>
     public partial class MainWindow : Window
     {
+        VideoProccessor _videoProc = new VideoProccessor();
         public MainWindow()
         {
             InitializeComponent();
+
+            _videoProc.ImageGrabEvent += _videoProc_ImageGrabEvent;
+            _videoProc.CaptureFromFile(Path.Combine("data", "o1.mp4"));
+            //_videoProc.CaptureFromGstreamer("udpsrc port=8000 ! gdpdepay ! rtph264depay ! decodebin ! autovideoconvert ! appsink sync=false");
+        }
+
+        private void _videoProc_ImageGrabEvent(object? sender, FrameGrabEventArgs e)
+        {
+            Dispatcher.Invoke(() =>
+            {
+                fpsBlock.Text = e.FPS.ToString();
+                realfpsBlock.Text = e.RealFPS.ToString();
+                image.Source = e.MatImage.ToImageSource();
+                timeBlock.Text = (DateTime.Now - e.TimeStartGetFrame).Milliseconds.ToString();
+            });
         }
     }
 }
