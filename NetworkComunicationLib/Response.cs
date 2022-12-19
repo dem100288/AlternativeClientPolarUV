@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using NetworkComunicationLib.DataTransferStruct;
 
 namespace NetworkComunicationLib
 {
@@ -10,32 +11,24 @@ namespace NetworkComunicationLib
     {
         public static explicit operator bool(Response response) => response.Header.Code == CodeEnum.Ok || response.Header.Code == CodeEnum.NoContent;
 
-        private string _data;
         private byte[] _bytes;
         private byte[] _bytes_decompresed;
-        public string DataView => _data;
         public byte[] DataBytes => _bytes;
         public byte[] DataDecompresedBytes => _bytes_decompresed;
-        private string Data
-        {
-            get
-            {
-                return _data;
-            }
-            set
-            {
-                _data = value;
-                _bytes = Encoding.UTF8.GetBytes(value);
-                _bytes_decompresed = LANController.Decompress(_bytes);
-            }
-        }
+
         private HeaderResponse Header;
-        public Response(string data, CodeEnum code, int endpoint) {
-            Data = data;
-            Header = new HeaderResponse(code, endpoint, (int)data.Length);
+        public Response(CodeEnum code, int endpoint, byte[] data) : this(new HeaderResponse(code, endpoint, (int)data.Length), data) { }
+
+        public Response(HeaderResponse header, byte[] data)
+        {
+            _bytes = data;
+            _bytes_decompresed = LANController.Decompress(data);
+            Header = header;
         }
-        public Response(Response response) { 
-            Data = response.Data;
+
+        public Response(Response response) {
+            _bytes = response._bytes;
+            _bytes_decompresed = response._bytes_decompresed;
             Header = response.Header;
         }
     }
